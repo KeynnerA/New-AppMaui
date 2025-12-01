@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="MauiApp1.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:MauiApp1.Views"
+    Title="MauiApp1">
+
+    <TabBar>
+    <ShellContent
+        Title="Notes"
+        ContentTemplate="{DataTemplate views:NotePage}"
+        Icon="icon_notes.png" />
+
+    <ShellContent
+    Title="About"
+    ContentTemplate="{DataTemplate views:AboutPage}"
+    Icon="icon_about.png" />
+
+        <ShellContent Title="Thanks"
+    ContentTemplate="{DataTemplate views:Thanks}"
+    Icon="icon_thanks.jpg" />
+    </TabBar>
+
+</Shell>
