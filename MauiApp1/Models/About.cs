@@ -12,5 +12,6 @@ namespace MauiApp1.Models
         public string Version => AppInfo.VersionString;
 
         public string MoreInfoUr1 => "https://thecodercave.com";
+        public string Message => "This app is writen in MAUI";
     }
 }
