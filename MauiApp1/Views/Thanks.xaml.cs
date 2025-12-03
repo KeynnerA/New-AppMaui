@@ -12,5 +12,3 @@ public partial class Thanks : ContentPage
 		await Launcher.Default.OpenAsync("https://thecodercave.com");
     }
 }
-
-//cambios en el repositorio remoto
