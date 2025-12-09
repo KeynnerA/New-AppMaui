@@ -12,10 +12,12 @@ public partial class NotePage : ContentPage
 		
 	}
 
-    private void SaveButton_Clicked(object sender, EventArgs e)
+    private async void SaveButton_Clicked(object sender, EventArgs e)
     {
 		File.WriteAllText(_fileName, TextEditor.Text);
+        await DisplayAlert("Aviso!", "Nota guardada", "OK");
     }
+	
 
     private void DeleteButton_Clicked(object sender, EventArgs e)
     {
