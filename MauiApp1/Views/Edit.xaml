@@ -8,7 +8,14 @@
          Placeholder="Edit you note here"
          HeightRequest="100"/>
 
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="4" >
+            <Button Text="Save"
+            Clicked="SaveButton_Clicked"/>
 
+            <Button Grid.Column="1" Text="Delete"
+            Clicked="DeleteButton_Clicked"/>
+
+        </Grid>
 
     </VerticalStackLayout>
 </ContentPage>
