@@ -23,6 +23,7 @@ public partial class NotePage : ContentPage
     private async void SaveButton_Clicked(object sender, EventArgs e)
     {
 		File.WriteAllText(_fileName, TextEditor.Text);
+        TextEditor.Text = string.Empty;
         await DisplayAlert("Aviso!", "Nota guardada", "OK");
     }
 	

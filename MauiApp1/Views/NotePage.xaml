@@ -18,9 +18,10 @@
         <VerticalStackLayout Grid.Row="1" Padding="10" Spacing="10">
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
-                <Entry x:Name="NotaEntry" Placeholder="Escribe tu nota aquí" />
+                <Entry x:Name="NotaEntry" Placeholder="Escribe tu nota aquí" Text="{Binding NotaEntryText}" />
                 <Button Grid.Column="0"
                         Text="Save"
+                        Clicked="SaveButton_Clicked"
                         Command="{Binding GuardarNotaCommand}"
                         CommandParameter="{Binding Text, Source={x:Reference NotaEntry}}" />
                 <Button Grid.Column="1"

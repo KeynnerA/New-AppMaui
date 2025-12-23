@@ -11,6 +11,7 @@ public class NotasViewModel
     // Comando para guardar una nueva nota
     public ICommand GuardarNotaCommand { get; }
 
+
     public NotasViewModel()
     {
         GuardarNotaCommand = new Command<string>(GuardarNota);
@@ -25,6 +26,9 @@ public class NotasViewModel
         };
 
         Notas.Add(nuevaNota);
+
+
+        contenido = string.Empty;
     }
 }
     public class Nota
