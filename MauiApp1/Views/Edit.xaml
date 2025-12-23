@@ -8,9 +8,8 @@
          Placeholder="Edit you note here"
          HeightRequest="100"/>
 
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="4" >
-            <Button Text="Save"
-            Clicked="SaveButton_Clicked"/>
+        <Grid ColumnSpacing="4" >
+            <Button Text="Save"/> 
 
         </Grid>
 
