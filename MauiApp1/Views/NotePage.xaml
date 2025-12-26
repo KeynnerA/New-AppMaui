@@ -32,11 +32,20 @@
             <CollectionView ItemsSource="{Binding Notas}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <VerticalStackLayout Padding="10">
-                            <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
-                            <Label Text="{Binding Contenido}" />
-                            <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
-                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,Auto" Padding="10">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
+                                <Label Text="{Binding Contenido}" />
+                                <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
+                            </VerticalStackLayout>
+                            <ImageButton Grid.Column="1"
+                             Source="icon_edit.png"
+                             WidthRequest="10"
+                             HeightRequest="10"
+                             BackgroundColor="Transparent"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarNotaCommand}"
+                            CommandParameter="{Binding .}" />
+                        </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

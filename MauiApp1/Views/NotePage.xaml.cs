@@ -2,7 +2,7 @@ namespace MauiApp1.Views;
 
 public partial class NotePage : ContentPage
 {
-	string _fileName = Path.Combine(FileSystem.AppDataDirectory, "notes.txt");
+	string _fileName = Path.Combine(FileSystem.AppDataDirectory, $"notes.txt");
 	public NotePage()
 	{
 		InitializeComponent();
@@ -12,19 +12,12 @@ public partial class NotePage : ContentPage
 		
 	}
 
-    public class Nota
-    {
-        public string Titulo { get; set; }
-        public string Contenido { get; set; }
-        public DateTime Fecha { get; set; } = DateTime.Now;
-    }
-
-
     private async void SaveButton_Clicked(object sender, EventArgs e)
     {
 		File.WriteAllText(_fileName, TextEditor.Text);
         TextEditor.Text = string.Empty;
         await DisplayAlert("Aviso!", "Nota guardada", "OK");
+        string A = (FileSystem.Current.AppDataDirectory); //Es para saber donde se encuentra el archivo
     }
 	
 
@@ -34,5 +27,10 @@ public partial class NotePage : ContentPage
 			File.Delete(_fileName);
 
 		TextEditor.Text = string.Empty;
+    }
+
+    private void EditButton_Clicked(object sender, EventArgs e) 
+    {
+        
     }
 }

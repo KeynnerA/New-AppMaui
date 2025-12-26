@@ -1,40 +1,96 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Input;
 
 namespace MauiApp1.Models;
 
-public class NotasViewModel
+public class NotasViewModel : INotifyPropertyChanged
 {
     // Colección observable que se enlaza a la UI
     public ObservableCollection<Nota> Notas { get; set; } = new ObservableCollection<Nota>();
 
-    // Comando para guardar una nueva nota
-    public ICommand GuardarNotaCommand { get; }
+    // Texto que se enlaza al Entry
+    private string _notaEntryText;
+    public string NotaEntryText
+    {
+        get => _notaEntryText;
+        set
+        {
+            if (_notaEntryText != value)
+            {
+                _notaEntryText = value;
+                OnPropertyChanged(nameof(NotaEntryText));
+            }
+        }
+    }
 
+    // Nota actualmente seleccionada para edición
+    private Nota _notaSeleccionada;
+    public Nota NotaSeleccionada
+    {
+        get => _notaSeleccionada;
+        set
+        {
+            if (_notaSeleccionada != value)
+            {
+                _notaSeleccionada = value;
+                OnPropertyChanged(nameof(NotaSeleccionada));
+            }
+        }
+    }
+
+    // Comandos
+    public ICommand GuardarNotaCommand { get; }
+    public ICommand EditarNotaCommand { get; }
 
     public NotasViewModel()
     {
         GuardarNotaCommand = new Command<string>(GuardarNota);
+        EditarNotaCommand = new Command<Nota>(EditarNota);
     }
 
     private void GuardarNota(string contenido)
     {
-        var nuevaNota = new Nota
+        if (NotaSeleccionada != null)
         {
-            Titulo = "Nueva Nota",
-            Contenido = contenido
-        };
+            // Si hay una nota seleccionada, actualizamos su contenido
+            NotaSeleccionada.Contenido = contenido;
+            NotaSeleccionada.Fecha = DateTime.Now;
+            NotaSeleccionada = null; // limpiamos selección
+        }
+        else
+        {
+            // Si no hay nota seleccionada, creamos una nueva
+            var nuevaNota = new Nota
+            {
+                Titulo = "Nueva Nota",
+                Contenido = contenido,
+                Fecha = DateTime.Now
+            };
+            Notas.Add(nuevaNota);
+        }
 
-        Notas.Add(nuevaNota);
-
-
-        contenido = string.Empty;
+        NotaEntryText = string.Empty; // limpiar el Entry
     }
-}
-    public class Nota
+
+    private void EditarNota(Nota nota)
     {
-        public string Titulo { get; set; }
-        public string Contenido { get; set; }
-        public DateTime Fecha { get; set; } = DateTime.Now;
+        if (nota != null)
+        {
+            NotaSeleccionada = nota;
+            NotaEntryText = nota.Contenido; // cargamos el contenido en el Entry
+        }
     }
 
+    // INotifyPropertyChanged
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+public class Nota
+{
+    public string Titulo { get; set; }
+    public string Contenido { get; set; }
+    public DateTime Fecha { get; set; } = DateTime.Now;
+}
