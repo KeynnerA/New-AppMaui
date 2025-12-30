@@ -69,8 +69,6 @@ public class NotasViewModel : INotifyPropertyChanged
             };
             Notas.Add(nuevaNota);
         }
-
-        NotaEntryText = string.Empty; // limpiar el Entry
     }
 
     private void EditarNota(Nota nota)

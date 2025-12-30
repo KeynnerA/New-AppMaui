@@ -16,7 +16,8 @@ public partial class NotePage : ContentPage
     {
         if (!string.IsNullOrWhiteSpace(TextEditor.Text))
         {
-            string fileName = Path.Combine(FileSystem.AppDataDirectory, $"{Guid.NewGuid()}.txt");
+            //string fileName = Path.Combine(FileSystem.AppDataDirectory, $"{Guid.NewGuid()}.txt");
+            string fileName = Path.Combine(FileSystem.AppDataDirectory, $"Notas_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
             File.WriteAllText(fileName, TextEditor.Text);
 
             TextEditor.Text = string.Empty;
@@ -38,4 +39,6 @@ public partial class NotePage : ContentPage
     {
         
     }
+
+
 }

@@ -18,12 +18,11 @@
         <VerticalStackLayout Grid.Row="1" Padding="10" Spacing="10">
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
-                <Entry x:Name="NotaEntry" Placeholder="Escribe tu nota aquí" Text="{Binding NotaEntryText}" />
                 <Button Grid.Column="0"
                         Text="Save"
                         Clicked="SaveButton_Clicked"
                         Command="{Binding GuardarNotaCommand}"
-                        CommandParameter="{Binding Text, Source={x:Reference NotaEntry}}" />
+                        CommandParameter="{Binding Text, Source={x:Reference TextEditor}}" />
                 <Button Grid.Column="1"
                         Text="Delete"
                         Clicked="DeleteButton_Clicked"/>
@@ -43,8 +42,9 @@
                              WidthRequest="10"
                              HeightRequest="10"
                              BackgroundColor="Transparent"
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarNotaCommand}"
-                            CommandParameter="{Binding .}" />
+                             Clicked="EditButton_Clicked"
+                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarNotaCommand}"
+                             CommandParameter="{Binding .}" />
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
