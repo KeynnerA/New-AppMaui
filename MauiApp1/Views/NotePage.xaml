@@ -12,6 +12,7 @@
 
         <Editor Grid.Row="0"
                 x:Name="TextEditor"
+                Text="{Binding NotaEntryText}"
                 Placeholder="Enter your note here"
                 HeightRequest="100"/>
 
