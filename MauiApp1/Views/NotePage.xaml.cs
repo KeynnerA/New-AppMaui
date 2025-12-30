@@ -14,12 +14,17 @@ public partial class NotePage : ContentPage
 
     private async void SaveButton_Clicked(object sender, EventArgs e)
     {
-		File.WriteAllText(_fileName, TextEditor.Text);
-        TextEditor.Text = string.Empty;
-        await DisplayAlert("Aviso!", "Nota guardada", "OK");
-        string A = (FileSystem.Current.AppDataDirectory); //Es para saber donde se encuentra el archivo
+        if (!string.IsNullOrWhiteSpace(TextEditor.Text))
+        {
+            string fileName = Path.Combine(FileSystem.AppDataDirectory, $"{Guid.NewGuid()}.txt");
+            File.WriteAllText(fileName, TextEditor.Text);
+
+            TextEditor.Text = string.Empty;
+            await DisplayAlert("Aviso!", "Nota guardada", "OK");
+        }
     }
-	
+
+
 
     private void DeleteButton_Clicked(object sender, EventArgs e)
     {
