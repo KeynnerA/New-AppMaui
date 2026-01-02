@@ -35,9 +35,26 @@ public partial class NotePage : ContentPage
 		TextEditor.Text = string.Empty;
     }
 
-    private void EditButton_Clicked(object sender, EventArgs e) 
+    private async void EditButton_Clicked(object sender, EventArgs e)
     {
-        
+        // Ofrece al usuario elegir entre editar en el mismo control o abrir la página "Edit"
+        var action = await DisplayActionSheet("¿Editar nota?", "Cancelar", null, "Editar aquí", "Editar en nueva página");
+
+        if (action == "Editar aquí")
+        {
+            // Lleva el foco al Editor para editar en el lugar
+            TextEditor.Focus();
+        }
+        else if (action == "Editar en nueva página")
+        {
+            // Crea la página de edición y pasa el texto actual como BindingContext
+            var editPage = new Edit
+            {
+                BindingContext = TextEditor.Text ?? string.Empty
+            };
+
+            await Navigation.PushAsync(editPage);
+        }
     }
 
 
