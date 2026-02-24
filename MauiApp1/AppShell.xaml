@@ -20,10 +20,6 @@
         <ShellContent Title="Thanks"
     ContentTemplate="{DataTemplate views:Thanks}"
     Icon="icon_thanks.jpg" />
-
-        <ShellContent Title="Edit"
-ContentTemplate="{DataTemplate views:Edit}"
-Icon="icon_edit.png" />
     </TabBar>
 
 </Shell>

@@ -38,11 +38,8 @@
                                 <Label Text="{Binding Contenido}" />
                                 <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
                             </VerticalStackLayout>
-                            <ImageButton Grid.Column="1"
-                             Source="icon_edit.png"
-                             WidthRequest="10"
-                             HeightRequest="10"
-                             BackgroundColor="Transparent"
+                            <Button Grid.Column="1"
+                             Text="Opcion"
                              Clicked="EditButton_Clicked"
                              Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarNotaCommand}"
                              CommandParameter="{Binding .}" />

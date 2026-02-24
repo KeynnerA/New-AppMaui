@@ -65,15 +65,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Views\Edit.xaml.cs">
-	    <DependentUpon>Edit.xaml</DependentUpon>
-	  </Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiXaml Update="Views\Edit.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
 	  <MauiXaml Update="Views\Thanks.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
