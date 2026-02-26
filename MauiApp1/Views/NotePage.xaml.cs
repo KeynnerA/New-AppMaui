@@ -41,6 +41,13 @@ public partial class NotePage : ContentPage
 
         if (action == "Editar nota")
         {
+            if (BindingContext is MauiApp1.Models.NotasViewModel vm &&
+                sender is Button button &&
+                button.BindingContext is MauiApp1.Models.Nota nota)
+            {
+                vm.NotaSeleccionada = nota;
+                vm.NotaEntryText = nota.Contenido;
+            }
             TextEditor.Focus();
         }
         else if (action == "Cancelar")
@@ -49,7 +56,12 @@ public partial class NotePage : ContentPage
         }
         else if (action == "Eliminar nota") 
         {
-            File.Delete(_fileName);
+            if (BindingContext is MauiApp1.Models.NotasViewModel vm &&
+                sender is Button button &&
+                button.BindingContext is MauiApp1.Models.Nota nota)
+            {
+                vm.Notas.Remove(nota);
+            }
         }
 
 

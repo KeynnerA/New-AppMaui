@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 
@@ -86,9 +86,51 @@ public class NotasViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
 
-public class Nota
+public class Nota : INotifyPropertyChanged
 {
-    public string Titulo { get; set; }
-    public string Contenido { get; set; }
-    public DateTime Fecha { get; set; } = DateTime.Now;
+    private string _titulo;
+    public string Titulo
+    {
+        get => _titulo;
+        set
+        {
+            if (_titulo != value)
+            {
+                _titulo = value;
+                OnPropertyChanged(nameof(Titulo));
+            }
+        }
+    }
+
+    private string _contenido;
+    public string Contenido
+    {
+        get => _contenido;
+        set
+        {
+            if (_contenido != value)
+            {
+                _contenido = value;
+                OnPropertyChanged(nameof(Contenido));
+            }
+        }
+    }
+
+    private DateTime _fecha = DateTime.Now;
+    public DateTime Fecha
+    {
+        get => _fecha;
+        set
+        {
+            if (_fecha != value)
+            {
+                _fecha = value;
+                OnPropertyChanged(nameof(Fecha));
+            }
+        }
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
