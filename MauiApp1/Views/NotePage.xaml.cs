@@ -47,6 +47,7 @@ public partial class NotePage : ContentPage
             {
                 vm.NotaSeleccionada = nota;
                 vm.NotaEntryText = nota.Contenido;
+                vm.TituloEntryText = nota.Titulo;
             }
             TextEditor.Focus();
         }

@@ -8,22 +8,27 @@
         <local:NotasViewModel />
     </ContentPage.BindingContext>
 
-    <Grid RowDefinitions="Auto,*" ColumnDefinitions="*">
+    <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*">
 
-        <Editor Grid.Row="0"
+        <!-- Título de la nota -->
+        <Entry Grid.Row="0"
+               Placeholder="Título"
+               Text="{Binding TituloEntryText}" />
+
+        <!-- Contenido de la nota -->
+        <Editor Grid.Row="1"
                 x:Name="TextEditor"
                 Text="{Binding NotaEntryText}"
-                Placeholder="Enter your note here"
+                Placeholder="Escribe tu nota aquí"
                 HeightRequest="100"/>
 
-        <VerticalStackLayout Grid.Row="1" Padding="10" Spacing="10">
+        <VerticalStackLayout Grid.Row="2" Padding="10" Spacing="10">
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                 <Button Grid.Column="0"
                         Text="Save"
                         Clicked="SaveButton_Clicked"
-                        Command="{Binding GuardarNotaCommand}"
-                        CommandParameter="{Binding Text, Source={x:Reference TextEditor}}" />
+                        Command="{Binding GuardarNotaCommand}" />
                 <Button Grid.Column="1"
                         Text="Delete"
                         Clicked="DeleteButton_Clicked"/>

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Input;
 
 namespace MauiApp1.Models;
@@ -9,7 +10,7 @@ public class NotasViewModel : INotifyPropertyChanged
     // Colección observable que se enlaza a la UI
     public ObservableCollection<Nota> Notas { get; set; } = new ObservableCollection<Nota>();
 
-    // Texto que se enlaza al Entry
+    // Texto que se enlaza al Editor (contenido de la nota)
     private string _notaEntryText;
     public string NotaEntryText
     {
@@ -20,6 +21,21 @@ public class NotasViewModel : INotifyPropertyChanged
             {
                 _notaEntryText = value;
                 OnPropertyChanged(nameof(NotaEntryText));
+            }
+        }
+    }
+
+    // Texto que se enlaza al Entry de título
+    private string _tituloEntryText;
+    public string TituloEntryText
+    {
+        get => _tituloEntryText;
+        set
+        {
+            if (_tituloEntryText != value)
+            {
+                _tituloEntryText = value;
+                OnPropertyChanged(nameof(TituloEntryText));
             }
         }
     }
@@ -45,15 +61,42 @@ public class NotasViewModel : INotifyPropertyChanged
 
     public NotasViewModel()
     {
-        GuardarNotaCommand = new Command<string>(GuardarNota);
+        GuardarNotaCommand = new Command(GuardarNota);
         EditarNotaCommand = new Command<Nota>(EditarNota);
     }
 
-    private void GuardarNota(string contenido)
+    private void GuardarNota()
     {
+        var contenido = NotaEntryText;
+
+        // No permitir guardar sin título
+        if (string.IsNullOrWhiteSpace(TituloEntryText))
+        {
+            return;
+        }
+
+        var tituloBase = TituloEntryText.Trim();
+
+        // Función local para obtener un título único con sufijos (2), (3), ...
+        string ObtenerTituloUnico(string baseTitle, Nota notaActual)
+        {
+            var tituloFinal = baseTitle;
+            var contador = 2;
+
+            while (Notas.Any(n => !ReferenceEquals(n, notaActual) && n.Titulo == tituloFinal))
+            {
+                tituloFinal = $"{baseTitle} ({contador})";
+                contador++;
+            }
+
+            return tituloFinal;
+        }
+
         if (NotaSeleccionada != null)
         {
-            // Si hay una nota seleccionada, actualizamos su contenido
+            // Si hay una nota seleccionada, actualizamos su contenido y título
+            var tituloFinal = ObtenerTituloUnico(tituloBase, NotaSeleccionada);
+            NotaSeleccionada.Titulo = tituloFinal;
             NotaSeleccionada.Contenido = contenido;
             NotaSeleccionada.Fecha = DateTime.Now;
             NotaSeleccionada = null; // limpiamos selección
@@ -61,14 +104,20 @@ public class NotasViewModel : INotifyPropertyChanged
         else
         {
             // Si no hay nota seleccionada, creamos una nueva
+            var tituloFinal = ObtenerTituloUnico(tituloBase, null);
+
             var nuevaNota = new Nota
             {
-                Titulo = "Nueva Nota",
+                Titulo = tituloFinal,
                 Contenido = contenido,
                 Fecha = DateTime.Now
             };
             Notas.Add(nuevaNota);
         }
+
+        // Limpiamos los campos de entrada después de guardar
+        NotaEntryText = string.Empty;
+        TituloEntryText = string.Empty;
     }
 
     private void EditarNota(Nota nota)
@@ -76,7 +125,8 @@ public class NotasViewModel : INotifyPropertyChanged
         if (nota != null)
         {
             NotaSeleccionada = nota;
-            NotaEntryText = nota.Contenido; // cargamos el contenido en el Entry
+            NotaEntryText = nota.Contenido; // cargamos el contenido en el Editor
+            TituloEntryText = nota.Titulo;  // cargamos el título en el Entry
         }
     }
 
