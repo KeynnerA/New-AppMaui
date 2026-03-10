@@ -27,8 +27,7 @@
             <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                 <Button Grid.Column="0"
                         Text="Save"
-                        Clicked="SaveButton_Clicked"
-                        Command="{Binding GuardarNotaCommand}" />
+                        Clicked="SaveButton_Clicked" />
                 <Button Grid.Column="1"
                         Text="Delete"
                         Clicked="DeleteButton_Clicked"/>

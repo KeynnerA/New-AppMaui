@@ -2,26 +2,28 @@ namespace MauiApp1.Views;
 
 public partial class NotePage : ContentPage
 {
-    string _fileName = Path.Combine(FileSystem.AppDataDirectory, $"notes.txt");
     public NotePage()
     {
         InitializeComponent();
-
-        if (File.Exists(_fileName))
-            TextEditor.Text = File.ReadAllText(_fileName);
-
     }
 
     private async void SaveButton_Clicked(object sender, EventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(TextEditor.Text))
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm)
         {
-            //string fileName = Path.Combine(FileSystem.AppDataDirectory, $"{Guid.NewGuid()}.txt");
-            string fileName = Path.Combine(FileSystem.AppDataDirectory, $"Notas_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
-            File.WriteAllText(fileName, TextEditor.Text);
+            if (string.IsNullOrWhiteSpace(vm.TituloEntryText))
+            {
+                await DisplayAlert("Advertencia",
+                                   "No hay título, coloque un título y podrá guardar la nota",
+                                   "OK");
+                return;
+            }
 
-            TextEditor.Text = string.Empty;
-            await DisplayAlert("Aviso!", "Nota guardada", "OK");
+            if (vm.GuardarNotaCommand.CanExecute(null))
+            {
+                vm.GuardarNotaCommand.Execute(null);
+                await DisplayAlert("Aviso", "Nota guardada", "OK");
+            }
         }
     }
 
@@ -29,9 +31,6 @@ public partial class NotePage : ContentPage
 
     private void DeleteButton_Clicked(object sender, EventArgs e)
     {
-        if (File.Exists(_fileName))
-            File.Delete(_fileName);
-
         TextEditor.Text = string.Empty;
     }
 
