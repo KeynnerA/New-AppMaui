@@ -1,12 +1,18 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Windows.Input;
+using Microsoft.Maui.Storage;
 
 namespace MauiApp1.Models;
 
 public class NotasViewModel : INotifyPropertyChanged
 {
+    private readonly string _filePath =
+        Path.Combine(FileSystem.AppDataDirectory, "notas.json");
+
     // Colección observable que se enlaza a la UI
     public ObservableCollection<Nota> Notas { get; set; } = new ObservableCollection<Nota>();
 
@@ -63,6 +69,8 @@ public class NotasViewModel : INotifyPropertyChanged
     {
         GuardarNotaCommand = new Command(GuardarNota);
         EditarNotaCommand = new Command<Nota>(EditarNota);
+
+        CargarNotasDesdeArchivo();
     }
 
     private void GuardarNota()
@@ -115,6 +123,8 @@ public class NotasViewModel : INotifyPropertyChanged
             Notas.Add(nuevaNota);
         }
 
+        GuardarNotasEnArchivo();
+
         // Limpiamos los campos de entrada después de guardar
         NotaEntryText = string.Empty;
         TituloEntryText = string.Empty;
@@ -127,6 +137,50 @@ public class NotasViewModel : INotifyPropertyChanged
             NotaSeleccionada = nota;
             NotaEntryText = nota.Contenido; // cargamos el contenido en el Editor
             TituloEntryText = nota.Titulo;  // cargamos el título en el Entry
+        }
+    }
+
+    public void EliminarNota(Nota nota)
+    {
+        if (nota != null && Notas.Contains(nota))
+        {
+            Notas.Remove(nota);
+            GuardarNotasEnArchivo();
+        }
+    }
+
+    private void CargarNotasDesdeArchivo()
+    {
+        try
+        {
+            if (File.Exists(_filePath))
+            {
+                var json = File.ReadAllText(_filePath);
+                var lista = JsonSerializer.Deserialize<List<Nota>>(json);
+                if (lista != null)
+                {
+                    Notas = new ObservableCollection<Nota>(lista);
+                    OnPropertyChanged(nameof(Notas));
+                }
+            }
+        }
+        catch
+        {
+            // Si algo falla al leer/parsear, simplemente empezamos con lista vacía.
+        }
+    }
+
+    private void GuardarNotasEnArchivo()
+    {
+        try
+        {
+            var opciones = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(Notas, opciones);
+            File.WriteAllText(_filePath, json);
+        }
+        catch
+        {
+            // En caso de error al guardar, no rompemos la app.
         }
     }
 

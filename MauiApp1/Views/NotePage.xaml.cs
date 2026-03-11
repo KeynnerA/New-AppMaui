@@ -60,7 +60,7 @@ public partial class NotePage : ContentPage
                 sender is Button button &&
                 button.BindingContext is MauiApp1.Models.Nota nota)
             {
-                vm.Notas.Remove(nota);
+                vm.EliminarNota(nota);
             }
         }
 
