@@ -4,6 +4,14 @@
              xmlns:local="clr-namespace:MauiApp1.Models"
              x:Class="MauiApp1.Views.NotePage"
              Title="NotePage">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="☑"
+                     Priority="0"
+                     Order="Primary"
+                     IsEnabled="{Binding PuedeActivarModoLista}"
+                     Clicked="ToggleEditorCheckboxToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
+
     <ContentPage.BindingContext>
         <local:NotasViewModel />
     </ContentPage.BindingContext>
@@ -15,12 +23,35 @@
                Placeholder="Título"
                Text="{Binding TituloEntryText}" />
 
-        <!-- Contenido de la nota -->
-        <Editor Grid.Row="1"
-                x:Name="TextEditor"
-                Text="{Binding NotaEntryText}"
-                Placeholder="Escribe tu nota aquí"
-                HeightRequest="100"/>
+        <!-- Contenido: texto plano o lista con varios checkboxes (solo al crear nota nueva) -->
+        <VerticalStackLayout Grid.Row="1" Spacing="8">
+            <Editor x:Name="TextEditor"
+                    IsVisible="{Binding UsaEditorTextoPlano}"
+                    Text="{Binding NotaEntryText}"
+                    Placeholder="Escribe tu nota aquí"
+                    HeightRequest="100"/>
+
+            <CollectionView ItemsSource="{Binding ItemsListaCheck}"
+                            IsVisible="{Binding ModoListaCheckboxActivo}"
+                            HeightRequest="220">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:NotaItemLista">
+                        <Grid ColumnDefinitions="Auto,*" Padding="4" ColumnSpacing="8">
+                            <CheckBox Grid.Column="0"
+                                      VerticalOptions="Center"
+                                      IsChecked="{Binding Marcado}" />
+                            <Entry Grid.Column="1"
+                                   Text="{Binding Texto}"
+                                   Placeholder="Ítem de la lista" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Añadir línea"
+                    IsVisible="{Binding ModoListaCheckboxActivo}"
+                    Clicked="AnadirLineaLista_Clicked" />
+        </VerticalStackLayout>
 
         <VerticalStackLayout Grid.Row="2" Padding="10" Spacing="10">
 

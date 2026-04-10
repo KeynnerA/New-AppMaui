@@ -31,7 +31,10 @@ public partial class NotePage : ContentPage
 
     private void DeleteButton_Clicked(object sender, EventArgs e)
     {
-        TextEditor.Text = string.Empty;
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm)
+        {
+            vm.LimpiarBorradorContenido();
+        }
     }
 
     private async void EditButton_Clicked(object sender, EventArgs e)
@@ -65,5 +68,21 @@ public partial class NotePage : ContentPage
         }
 
 
+    }
+
+    private void ToggleEditorCheckboxToolbarItem_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm)
+        {
+            vm.AlternarModoListaCheck();
+        }
+    }
+
+    private void AnadirLineaLista_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm)
+        {
+            vm.ItemsListaCheck.Add(new MauiApp1.Models.NotaItemLista());
+        }
     }
 }

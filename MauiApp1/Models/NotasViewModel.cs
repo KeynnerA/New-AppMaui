@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -46,6 +47,29 @@ public class NotasViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool _modoListaCheckboxActivo;
+    public bool ModoListaCheckboxActivo
+    {
+        get => _modoListaCheckboxActivo;
+        private set
+        {
+            if (_modoListaCheckboxActivo != value)
+            {
+                _modoListaCheckboxActivo = value;
+                OnPropertyChanged(nameof(ModoListaCheckboxActivo));
+                OnPropertyChanged(nameof(UsaEditorTextoPlano));
+            }
+        }
+    }
+
+    /// <summary>True cuando se muestra el Editor de texto plano (no la lista con checkboxes).</summary>
+    public bool UsaEditorTextoPlano => !ModoListaCheckboxActivo;
+
+    /// <summary>El ícono de lista solo aplica al crear una nota nueva, no al editar una guardada.</summary>
+    public bool PuedeActivarModoLista => NotaSeleccionada == null;
+
+    public ObservableCollection<NotaItemLista> ItemsListaCheck { get; } = new();
+
     // Nota actualmente seleccionada para edición
     private Nota _notaSeleccionada;
     public Nota NotaSeleccionada
@@ -56,7 +80,15 @@ public class NotasViewModel : INotifyPropertyChanged
             if (_notaSeleccionada != value)
             {
                 _notaSeleccionada = value;
+                if (value != null)
+                {
+                    ModoListaCheckboxActivo = false;
+                    ItemsListaCheck.Clear();
+                }
+
                 OnPropertyChanged(nameof(NotaSeleccionada));
+                OnPropertyChanged(nameof(PuedeActivarModoLista));
+                OnPropertyChanged(nameof(UsaEditorTextoPlano));
             }
         }
     }
@@ -75,7 +107,9 @@ public class NotasViewModel : INotifyPropertyChanged
 
     private void GuardarNota()
     {
-        var contenido = NotaEntryText;
+        var contenido = ModoListaCheckboxActivo
+            ? ConstruirTextoDesdeListaCheck()
+            : NotaEntryText;
 
         // No permitir guardar sin título
         if (string.IsNullOrWhiteSpace(TituloEntryText))
@@ -128,6 +162,69 @@ public class NotasViewModel : INotifyPropertyChanged
         // Limpiamos los campos de entrada después de guardar
         NotaEntryText = string.Empty;
         TituloEntryText = string.Empty;
+        ModoListaCheckboxActivo = false;
+        ItemsListaCheck.Clear();
+        OnPropertyChanged(nameof(PuedeActivarModoLista));
+    }
+
+    public void LimpiarBorradorContenido()
+    {
+        NotaEntryText = string.Empty;
+        ItemsListaCheck.Clear();
+        ModoListaCheckboxActivo = false;
+    }
+
+    public void AlternarModoListaCheck()
+    {
+        if (!PuedeActivarModoLista)
+            return;
+
+        if (!ModoListaCheckboxActivo)
+        {
+            ModoListaCheckboxActivo = true;
+            ItemsListaCheck.Clear();
+
+            if (!string.IsNullOrWhiteSpace(NotaEntryText))
+            {
+                foreach (var linea in NotaEntryText.Split(
+                             new[] { "\r\n", "\n", "\r" },
+                             StringSplitOptions.None))
+                {
+                    var t = linea.Trim();
+                    if (t.Length > 0)
+                        ItemsListaCheck.Add(new NotaItemLista { Texto = t });
+                }
+            }
+
+            if (ItemsListaCheck.Count == 0)
+            {
+                ItemsListaCheck.Add(new NotaItemLista());
+                ItemsListaCheck.Add(new NotaItemLista());
+            }
+        }
+        else
+        {
+            NotaEntryText = string.Join(
+                Environment.NewLine,
+                ItemsListaCheck.Select(i => i.Texto?.Trim() ?? string.Empty)
+                    .Where(s => s.Length > 0));
+            ItemsListaCheck.Clear();
+            ModoListaCheckboxActivo = false;
+        }
+    }
+
+    private string ConstruirTextoDesdeListaCheck()
+    {
+        var lineas = new List<string>();
+        foreach (var i in ItemsListaCheck)
+        {
+            var texto = i.Texto?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(texto))
+                continue;
+            lineas.Add((i.Marcado ? "☑ " : "☐ ") + texto);
+        }
+
+        return string.Join(Environment.NewLine, lineas);
     }
 
     private void EditarNota(Nota nota)
@@ -185,6 +282,41 @@ public class NotasViewModel : INotifyPropertyChanged
     }
 
     // INotifyPropertyChanged
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+public class NotaItemLista : INotifyPropertyChanged
+{
+    private bool _marcado;
+    public bool Marcado
+    {
+        get => _marcado;
+        set
+        {
+            if (_marcado != value)
+            {
+                _marcado = value;
+                OnPropertyChanged(nameof(Marcado));
+            }
+        }
+    }
+
+    private string _texto;
+    public string Texto
+    {
+        get => _texto;
+        set
+        {
+            if (_texto != value)
+            {
+                _texto = value;
+                OnPropertyChanged(nameof(Texto));
+            }
+        }
+    }
+
     public event PropertyChangedEventHandler PropertyChanged;
     protected void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
