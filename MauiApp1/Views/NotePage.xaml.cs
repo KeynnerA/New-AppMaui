@@ -47,11 +47,13 @@ public partial class NotePage : ContentPage
                 sender is Button button &&
                 button.BindingContext is MauiApp1.Models.Nota nota)
             {
-                vm.NotaSeleccionada = nota;
-                vm.NotaEntryText = nota.Contenido;
-                vm.TituloEntryText = nota.Titulo;
+                vm.CargarNotaParaEdicion(nota);
             }
-            TextEditor.Focus();
+
+            if (BindingContext is MauiApp1.Models.NotasViewModel vmEdicion && vmEdicion.UsaEditorTextoPlano)
+            {
+                TextEditor.Focus();
+            }
         }
         else if (action == "Cancelar")
         {
@@ -83,6 +85,15 @@ public partial class NotePage : ContentPage
         if (BindingContext is MauiApp1.Models.NotasViewModel vm)
         {
             vm.ItemsListaCheck.Add(new MauiApp1.Models.NotaItemLista());
+        }
+    }
+
+    private void EliminarLineaLista_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm &&
+            vm.ItemsListaCheck.Count > 0)
+        {
+            vm.ItemsListaCheck.RemoveAt(vm.ItemsListaCheck.Count - 1);
         }
     }
 }

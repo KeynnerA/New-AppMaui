@@ -2,8 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MauiApp1.Models"
+             xmlns:converters="clr-namespace:MauiApp1.Converters"
              x:Class="MauiApp1.Views.NotePage"
              Title="NotePage">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:ContenidoNotaAFormattedStringConverter x:Key="ContenidoNotaAFormattedStringConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="☑"
                      Priority="0"
@@ -23,7 +30,7 @@
                Placeholder="Título"
                Text="{Binding TituloEntryText}" />
 
-        <!-- Contenido: texto plano o lista con varios checkboxes (solo al crear nota nueva) -->
+        <!-- Contenido: texto plano o lista con varios checkboxes -->
         <VerticalStackLayout Grid.Row="1" Spacing="8">
             <Editor x:Name="TextEditor"
                     IsVisible="{Binding UsaEditorTextoPlano}"
@@ -48,14 +55,21 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Button Text="Añadir línea"
-                    IsVisible="{Binding ModoListaCheckboxActivo}"
-                    Clicked="AnadirLineaLista_Clicked" />
+            <Grid IsVisible="{Binding ModoListaCheckboxActivo}"
+                  Padding="10,0"
+                  ColumnDefinitions="*,*"
+                  ColumnSpacing="4">
+                <Button Grid.Column="0"
+                        Text="Añadir línea"
+                        Clicked="AnadirLineaLista_Clicked" />
+                <Button Grid.Column="1"
+                        Text="Eliminar línea"
+                        Clicked="EliminarLineaLista_Clicked" />
+            </Grid>
         </VerticalStackLayout>
 
-        <VerticalStackLayout Grid.Row="2" Padding="10" Spacing="10">
-
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+        <Grid Grid.Row="2" Padding="10" RowDefinitions="Auto,*" RowSpacing="10">
+            <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="4">
                 <Button Grid.Column="0"
                         Text="Save"
                         Clicked="SaveButton_Clicked" />
@@ -64,13 +78,15 @@
                         Clicked="DeleteButton_Clicked"/>
             </Grid>
 
-            <CollectionView ItemsSource="{Binding Notas}">
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Notas}"
+                            VerticalOptions="FillAndExpand">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto" Padding="10">
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
-                                <Label Text="{Binding Contenido}" />
+                                <Label FormattedText="{Binding Contenido, Converter={StaticResource ContenidoNotaAFormattedStringConverter}}" />
                                 <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
                             </VerticalStackLayout>
                             <Button Grid.Column="1"
@@ -80,7 +96,6 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-        </VerticalStackLayout>
+        </Grid>
     </Grid>
 </ContentPage>

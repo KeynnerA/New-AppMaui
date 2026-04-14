@@ -9,8 +9,8 @@ namespace MauiApp1.Models
     internal class Note
     {
         public int ID { get; set;}
-        public string FileName { get; set;}
-        public string Text { get; set;}
+    public string FileName { get; set;} = string.Empty;
+    public string Text { get; set;} = string.Empty;
         public DateTime Date { get; set;}
     }
 }

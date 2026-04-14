@@ -18,7 +18,7 @@ public class NotasViewModel : INotifyPropertyChanged
     public ObservableCollection<Nota> Notas { get; set; } = new ObservableCollection<Nota>();
 
     // Texto que se enlaza al Editor (contenido de la nota)
-    private string _notaEntryText;
+    private string _notaEntryText = string.Empty;
     public string NotaEntryText
     {
         get => _notaEntryText;
@@ -33,7 +33,7 @@ public class NotasViewModel : INotifyPropertyChanged
     }
 
     // Texto que se enlaza al Entry de título
-    private string _tituloEntryText;
+    private string _tituloEntryText = string.Empty;
     public string TituloEntryText
     {
         get => _tituloEntryText;
@@ -65,14 +65,14 @@ public class NotasViewModel : INotifyPropertyChanged
     /// <summary>True cuando se muestra el Editor de texto plano (no la lista con checkboxes).</summary>
     public bool UsaEditorTextoPlano => !ModoListaCheckboxActivo;
 
-    /// <summary>El ícono de lista solo aplica al crear una nota nueva, no al editar una guardada.</summary>
-    public bool PuedeActivarModoLista => NotaSeleccionada == null;
+    /// <summary>Permite alternar a modo lista con checkboxes tanto al crear como al editar.</summary>
+    public bool PuedeActivarModoLista => true;
 
     public ObservableCollection<NotaItemLista> ItemsListaCheck { get; } = new();
 
     // Nota actualmente seleccionada para edición
-    private Nota _notaSeleccionada;
-    public Nota NotaSeleccionada
+    private Nota? _notaSeleccionada;
+    public Nota? NotaSeleccionada
     {
         get => _notaSeleccionada;
         set
@@ -80,12 +80,6 @@ public class NotasViewModel : INotifyPropertyChanged
             if (_notaSeleccionada != value)
             {
                 _notaSeleccionada = value;
-                if (value != null)
-                {
-                    ModoListaCheckboxActivo = false;
-                    ItemsListaCheck.Clear();
-                }
-
                 OnPropertyChanged(nameof(NotaSeleccionada));
                 OnPropertyChanged(nameof(PuedeActivarModoLista));
                 OnPropertyChanged(nameof(UsaEditorTextoPlano));
@@ -120,7 +114,7 @@ public class NotasViewModel : INotifyPropertyChanged
         var tituloBase = TituloEntryText.Trim();
 
         // Función local para obtener un título único con sufijos (2), (3), ...
-        string ObtenerTituloUnico(string baseTitle, Nota notaActual)
+        string ObtenerTituloUnico(string baseTitle, Nota? notaActual)
         {
             var tituloFinal = baseTitle;
             var contador = 2;
@@ -137,11 +131,13 @@ public class NotasViewModel : INotifyPropertyChanged
         if (NotaSeleccionada != null)
         {
             // Si hay una nota seleccionada, actualizamos su contenido y título
-            var tituloFinal = ObtenerTituloUnico(tituloBase, NotaSeleccionada);
-            NotaSeleccionada.Titulo = tituloFinal;
-            NotaSeleccionada.Contenido = contenido;
-            NotaSeleccionada.Fecha = DateTime.Now;
+            var notaEnEdicion = NotaSeleccionada;
+            var tituloFinal = ObtenerTituloUnico(tituloBase, notaEnEdicion);
+            notaEnEdicion.Titulo = tituloFinal;
+            notaEnEdicion.Contenido = contenido;
+            notaEnEdicion.Fecha = DateTime.Now;
             NotaSeleccionada = null; // limpiamos selección
+            OnPropertyChanged(nameof(Notas)); // fuerza refresco visual cuando el contenido queda vacío
         }
         else
         {
@@ -176,9 +172,6 @@ public class NotasViewModel : INotifyPropertyChanged
 
     public void AlternarModoListaCheck()
     {
-        if (!PuedeActivarModoLista)
-            return;
-
         if (!ModoListaCheckboxActivo)
         {
             ModoListaCheckboxActivo = true;
@@ -227,17 +220,82 @@ public class NotasViewModel : INotifyPropertyChanged
         return string.Join(Environment.NewLine, lineas);
     }
 
-    private void EditarNota(Nota nota)
+    private void EditarNota(Nota? nota)
     {
         if (nota != null)
         {
-            NotaSeleccionada = nota;
-            NotaEntryText = nota.Contenido; // cargamos el contenido en el Editor
-            TituloEntryText = nota.Titulo;  // cargamos el título en el Entry
+            CargarNotaParaEdicion(nota);
         }
     }
 
-    public void EliminarNota(Nota nota)
+    public void CargarNotaParaEdicion(Nota nota)
+    {
+        NotaSeleccionada = nota;
+        TituloEntryText = nota.Titulo;
+
+        if (IntentarCargarContenidoComoLista(nota.Contenido))
+        {
+            // Ya quedó cargado en ItemsListaCheck.
+            return;
+        }
+
+        ModoListaCheckboxActivo = false;
+        ItemsListaCheck.Clear();
+        NotaEntryText = nota.Contenido;
+    }
+
+    private bool IntentarCargarContenidoComoLista(string contenido)
+    {
+        var lineas = contenido.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+        var items = new List<NotaItemLista>();
+        var tieneMarcadores = false;
+
+        foreach (var linea in lineas)
+        {
+            var t = linea.Trim();
+            if (t.Length == 0)
+            {
+                continue;
+            }
+
+            if (t.StartsWith("☑ "))
+            {
+                tieneMarcadores = true;
+                items.Add(new NotaItemLista { Marcado = true, Texto = t[2..].Trim() });
+            }
+            else if (t.StartsWith("☐ "))
+            {
+                tieneMarcadores = true;
+                items.Add(new NotaItemLista { Marcado = false, Texto = t[2..].Trim() });
+            }
+            else
+            {
+                items.Add(new NotaItemLista { Marcado = false, Texto = t });
+            }
+        }
+
+        if (!tieneMarcadores)
+        {
+            return false;
+        }
+
+        ItemsListaCheck.Clear();
+        foreach (var item in items)
+        {
+            ItemsListaCheck.Add(item);
+        }
+
+        if (ItemsListaCheck.Count == 0)
+        {
+            ItemsListaCheck.Add(new NotaItemLista());
+        }
+
+        NotaEntryText = string.Empty;
+        ModoListaCheckboxActivo = true;
+        return true;
+    }
+
+    public void EliminarNota(Nota? nota)
     {
         if (nota != null && Notas.Contains(nota))
         {
@@ -282,7 +340,7 @@ public class NotasViewModel : INotifyPropertyChanged
     }
 
     // INotifyPropertyChanged
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
@@ -303,7 +361,7 @@ public class NotaItemLista : INotifyPropertyChanged
         }
     }
 
-    private string _texto;
+    private string _texto = string.Empty;
     public string Texto
     {
         get => _texto;
@@ -317,14 +375,14 @@ public class NotaItemLista : INotifyPropertyChanged
         }
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
 
 public class Nota : INotifyPropertyChanged
 {
-    private string _titulo;
+    private string _titulo = string.Empty;
     public string Titulo
     {
         get => _titulo;
@@ -338,7 +396,7 @@ public class Nota : INotifyPropertyChanged
         }
     }
 
-    private string _contenido;
+    private string _contenido = string.Empty;
     public string Contenido
     {
         get => _contenido;
@@ -366,7 +424,7 @@ public class Nota : INotifyPropertyChanged
         }
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
