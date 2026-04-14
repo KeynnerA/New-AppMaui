@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -97,6 +98,50 @@ public class NotasViewModel : INotifyPropertyChanged
         EditarNotaCommand = new Command<Nota>(EditarNota);
 
         CargarNotasDesdeArchivo();
+        ConfigurarSincronizacionNotas();
+    }
+
+    private void ConfigurarSincronizacionNotas()
+    {
+        foreach (var nota in Notas)
+        {
+            SuscribirNota(nota);
+        }
+
+        Notas.CollectionChanged += Notas_CollectionChanged;
+    }
+
+    private void Notas_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems != null)
+        {
+            foreach (var item in e.NewItems.OfType<Nota>())
+            {
+                SuscribirNota(item);
+            }
+        }
+
+        if (e.OldItems != null)
+        {
+            foreach (var item in e.OldItems.OfType<Nota>())
+            {
+                item.PropertyChanged -= Nota_PropertyChanged;
+            }
+        }
+    }
+
+    private void SuscribirNota(Nota nota)
+    {
+        nota.PropertyChanged -= Nota_PropertyChanged;
+        nota.PropertyChanged += Nota_PropertyChanged;
+    }
+
+    private void Nota_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Nota.Contenido) || e.PropertyName == nameof(Nota.Titulo))
+        {
+            GuardarNotasEnArchivo();
+        }
     }
 
     private void GuardarNota()
@@ -382,6 +427,9 @@ public class NotaItemLista : INotifyPropertyChanged
 
 public class Nota : INotifyPropertyChanged
 {
+    private bool _sincronizandoContenido;
+    private bool _sincronizandoLineas;
+
     private string _titulo = string.Empty;
     public string Titulo
     {
@@ -405,10 +453,33 @@ public class Nota : INotifyPropertyChanged
             if (_contenido != value)
             {
                 _contenido = value;
+                if (!_sincronizandoLineas)
+                {
+                    SincronizarLineasDesdeContenido();
+                }
                 OnPropertyChanged(nameof(Contenido));
             }
         }
     }
+
+    private bool _tieneFormatoChecklist;
+    public bool TieneFormatoChecklist
+    {
+        get => _tieneFormatoChecklist;
+        private set
+        {
+            if (_tieneFormatoChecklist != value)
+            {
+                _tieneFormatoChecklist = value;
+                OnPropertyChanged(nameof(TieneFormatoChecklist));
+                OnPropertyChanged(nameof(MostrarTextoPlano));
+            }
+        }
+    }
+
+    public bool MostrarTextoPlano => !TieneFormatoChecklist;
+
+    public ObservableCollection<NotaLineaVisual> LineasVisuales { get; } = new();
 
     private DateTime _fecha = DateTime.Now;
     public DateTime Fecha
@@ -420,6 +491,128 @@ public class Nota : INotifyPropertyChanged
             {
                 _fecha = value;
                 OnPropertyChanged(nameof(Fecha));
+            }
+        }
+    }
+
+    public Nota()
+    {
+        SincronizarLineasDesdeContenido();
+    }
+
+    private void SincronizarLineasDesdeContenido()
+    {
+        if (_sincronizandoContenido)
+            return;
+
+        _sincronizandoContenido = true;
+        try
+        {
+            var lineas = _contenido.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            var items = new List<NotaLineaVisual>();
+            var tieneMarcadores = false;
+
+            foreach (var linea in lineas)
+            {
+                var t = linea.Trim();
+                if (string.IsNullOrEmpty(t))
+                    continue;
+
+                if (t.StartsWith("☑ "))
+                {
+                    tieneMarcadores = true;
+                    items.Add(new NotaLineaVisual(t[2..].Trim(), true, ReconstruirContenidoDesdeLineas));
+                }
+                else if (t.StartsWith("☐ "))
+                {
+                    tieneMarcadores = true;
+                    items.Add(new NotaLineaVisual(t[2..].Trim(), false, ReconstruirContenidoDesdeLineas));
+                }
+                else
+                {
+                    items.Add(new NotaLineaVisual(t, false, ReconstruirContenidoDesdeLineas));
+                }
+            }
+
+            LineasVisuales.Clear();
+            if (tieneMarcadores)
+            {
+                foreach (var item in items)
+                {
+                    LineasVisuales.Add(item);
+                }
+            }
+
+            TieneFormatoChecklist = tieneMarcadores;
+        }
+        finally
+        {
+            _sincronizandoContenido = false;
+        }
+    }
+
+    private void ReconstruirContenidoDesdeLineas()
+    {
+        if (_sincronizandoContenido)
+            return;
+
+        _sincronizandoLineas = true;
+        try
+        {
+            Contenido = string.Join(
+                Environment.NewLine,
+                LineasVisuales
+                    .Where(l => !string.IsNullOrWhiteSpace(l.Texto))
+                    .Select(l => (l.Marcado ? "☑ " : "☐ ") + l.Texto.Trim()));
+        }
+        finally
+        {
+            _sincronizandoLineas = false;
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+public class NotaLineaVisual : INotifyPropertyChanged
+{
+    private readonly Action _onChanged;
+    private bool _marcado;
+    private string _texto;
+
+    public NotaLineaVisual(string texto, bool marcado, Action onChanged)
+    {
+        _texto = texto;
+        _marcado = marcado;
+        _onChanged = onChanged;
+    }
+
+    public bool Marcado
+    {
+        get => _marcado;
+        set
+        {
+            if (_marcado != value)
+            {
+                _marcado = value;
+                OnPropertyChanged(nameof(Marcado));
+                _onChanged();
+            }
+        }
+    }
+
+    public string Texto
+    {
+        get => _texto;
+        set
+        {
+            if (_texto != value)
+            {
+                _texto = value;
+                OnPropertyChanged(nameof(Texto));
+                _onChanged();
             }
         }
     }

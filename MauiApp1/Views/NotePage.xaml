@@ -86,7 +86,28 @@
                         <Grid ColumnDefinitions="*,Auto" Padding="10">
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
-                                <Label FormattedText="{Binding Contenido, Converter={StaticResource ContenidoNotaAFormattedStringConverter}}" />
+                                <VerticalStackLayout IsVisible="{Binding TieneFormatoChecklist}"
+                                                     BindableLayout.ItemsSource="{Binding LineasVisuales}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="local:NotaLineaVisual">
+                                            <HorizontalStackLayout Spacing="6">
+                                                <CheckBox IsChecked="{Binding Marcado}" VerticalOptions="Center" />
+                                                <Label Text="{Binding Texto}" VerticalOptions="Center">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Marcado}"
+                                                                     Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                            <Setter Property="FontAttributes" Value="Bold" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </HorizontalStackLayout>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                                <Label IsVisible="{Binding MostrarTextoPlano}"
+                                       FormattedText="{Binding Contenido, Converter={StaticResource ContenidoNotaAFormattedStringConverter}}" />
                                 <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
                             </VerticalStackLayout>
                             <Button Grid.Column="1"
