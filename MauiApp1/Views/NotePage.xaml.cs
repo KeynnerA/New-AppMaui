@@ -23,6 +23,7 @@ public partial class NotePage : ContentPage
             {
                 vm.GuardarNotaCommand.Execute(null);
                 await DisplayAlert("Aviso", "Nota guardada", "OK");
+                AlarmPanel.IsVisible = false;
             }
         }
     }
@@ -95,5 +96,29 @@ public partial class NotePage : ContentPage
         {
             vm.ItemsListaCheck.RemoveAt(vm.ItemsListaCheck.Count - 1);
         }
+    }
+
+    private void MostrarAlarmaToolbarItem_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm)
+        {
+            AlarmTimePicker.Time = vm.HoraAlarmaBorrador;
+        }
+
+        AlarmPanel.IsVisible = !AlarmPanel.IsVisible;
+    }
+
+    private async void GuardarAlarma_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm)
+        {
+            vm.HoraAlarmaBorrador = AlarmTimePicker.Time;
+        }
+
+        var estado = (BindingContext as MauiApp1.Models.NotasViewModel)?.AlarmaActivaBorrador == true
+            ? $"Alarma colocada a la nota para las {DateTime.Today.Add(AlarmTimePicker.Time):hh:mm tt}"
+            : "Alarma desactivada para esta nota";
+
+        await DisplayAlert("Alarma", estado, "OK");
     }
 }

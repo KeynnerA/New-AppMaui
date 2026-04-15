@@ -17,6 +17,10 @@
                      Order="Primary"
                      IsEnabled="{Binding PuedeActivarModoLista}"
                      Clicked="ToggleEditorCheckboxToolbarItem_Clicked" />
+        <ToolbarItem Text="⏰"
+                     Priority="1"
+                     Order="Primary"
+                     Clicked="MostrarAlarmaToolbarItem_Clicked" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.BindingContext>
@@ -32,6 +36,23 @@
 
         <!-- Contenido: texto plano o lista con varios checkboxes -->
         <VerticalStackLayout Grid.Row="1" Spacing="8">
+            <Border x:Name="AlarmPanel"
+                    IsVisible="False"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="10">
+                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                    <CheckBox IsChecked="{Binding AlarmaActivaBorrador}" VerticalOptions="Center" />
+                    <Label Text="Hora alarma:" VerticalOptions="Center" />
+                    <TimePicker x:Name="AlarmTimePicker"
+                                Time="{Binding HoraAlarmaBorrador}"
+                                IsEnabled="{Binding AlarmaActivaBorrador}"
+                                VerticalOptions="Center" />
+                    <Button Text="Guardar"
+                            Padding="10,4"
+                            Clicked="GuardarAlarma_Clicked" />
+                </HorizontalStackLayout>
+            </Border>
+
             <Editor x:Name="TextEditor"
                     IsVisible="{Binding UsaEditorTextoPlano}"
                     Text="{Binding NotaEntryText}"
@@ -108,6 +129,10 @@
                                 </VerticalStackLayout>
                                 <Label IsVisible="{Binding MostrarTextoPlano}"
                                        FormattedText="{Binding Contenido, Converter={StaticResource ContenidoNotaAFormattedStringConverter}}" />
+                                <Label IsVisible="{Binding TieneAlarma}"
+                                       Text="{Binding HoraAlarmaTexto}"
+                                       FontSize="11"
+                                       TextColor="DarkOrange"/>
                                 <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
                             </VerticalStackLayout>
                             <Button Grid.Column="1"

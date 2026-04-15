@@ -48,6 +48,34 @@ public class NotasViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool _alarmaActivaBorrador;
+    public bool AlarmaActivaBorrador
+    {
+        get => _alarmaActivaBorrador;
+        set
+        {
+            if (_alarmaActivaBorrador != value)
+            {
+                _alarmaActivaBorrador = value;
+                OnPropertyChanged(nameof(AlarmaActivaBorrador));
+            }
+        }
+    }
+
+    private TimeSpan _horaAlarmaBorrador = new(8, 0, 0);
+    public TimeSpan HoraAlarmaBorrador
+    {
+        get => _horaAlarmaBorrador;
+        set
+        {
+            if (_horaAlarmaBorrador != value)
+            {
+                _horaAlarmaBorrador = value;
+                OnPropertyChanged(nameof(HoraAlarmaBorrador));
+            }
+        }
+    }
+
     private bool _modoListaCheckboxActivo;
     public bool ModoListaCheckboxActivo
     {
@@ -138,7 +166,9 @@ public class NotasViewModel : INotifyPropertyChanged
 
     private void Nota_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Nota.Contenido) || e.PropertyName == nameof(Nota.Titulo))
+        if (e.PropertyName == nameof(Nota.Contenido) ||
+            e.PropertyName == nameof(Nota.Titulo) ||
+            e.PropertyName == nameof(Nota.HoraAlarma))
         {
             GuardarNotasEnArchivo();
         }
@@ -180,6 +210,7 @@ public class NotasViewModel : INotifyPropertyChanged
             var tituloFinal = ObtenerTituloUnico(tituloBase, notaEnEdicion);
             notaEnEdicion.Titulo = tituloFinal;
             notaEnEdicion.Contenido = contenido;
+            notaEnEdicion.HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null;
             notaEnEdicion.Fecha = DateTime.Now;
             NotaSeleccionada = null; // limpiamos selección
             OnPropertyChanged(nameof(Notas)); // fuerza refresco visual cuando el contenido queda vacío
@@ -193,6 +224,7 @@ public class NotasViewModel : INotifyPropertyChanged
             {
                 Titulo = tituloFinal,
                 Contenido = contenido,
+                HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null,
                 Fecha = DateTime.Now
             };
             Notas.Add(nuevaNota);
@@ -205,6 +237,8 @@ public class NotasViewModel : INotifyPropertyChanged
         TituloEntryText = string.Empty;
         ModoListaCheckboxActivo = false;
         ItemsListaCheck.Clear();
+        AlarmaActivaBorrador = false;
+        HoraAlarmaBorrador = new TimeSpan(8, 0, 0);
         OnPropertyChanged(nameof(PuedeActivarModoLista));
     }
 
@@ -213,6 +247,8 @@ public class NotasViewModel : INotifyPropertyChanged
         NotaEntryText = string.Empty;
         ItemsListaCheck.Clear();
         ModoListaCheckboxActivo = false;
+        AlarmaActivaBorrador = false;
+        HoraAlarmaBorrador = new TimeSpan(8, 0, 0);
     }
 
     public void AlternarModoListaCheck()
@@ -277,6 +313,8 @@ public class NotasViewModel : INotifyPropertyChanged
     {
         NotaSeleccionada = nota;
         TituloEntryText = nota.Titulo;
+        AlarmaActivaBorrador = nota.HoraAlarma.HasValue;
+        HoraAlarmaBorrador = nota.HoraAlarma ?? new TimeSpan(8, 0, 0);
 
         if (IntentarCargarContenidoComoLista(nota.Contenido))
         {
@@ -499,6 +537,27 @@ public class Nota : INotifyPropertyChanged
     {
         SincronizarLineasDesdeContenido();
     }
+
+    private TimeSpan? _horaAlarma;
+    public TimeSpan? HoraAlarma
+    {
+        get => _horaAlarma;
+        set
+        {
+            if (_horaAlarma != value)
+            {
+                _horaAlarma = value;
+                OnPropertyChanged(nameof(HoraAlarma));
+                OnPropertyChanged(nameof(TieneAlarma));
+                OnPropertyChanged(nameof(HoraAlarmaTexto));
+            }
+        }
+    }
+
+    public bool TieneAlarma => HoraAlarma.HasValue;
+    public string HoraAlarmaTexto => HoraAlarma.HasValue
+        ? $"{DateTime.Today.Add(HoraAlarma.Value):hh:mm tt}"
+        : string.Empty;
 
     private void SincronizarLineasDesdeContenido()
     {
