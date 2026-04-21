@@ -76,6 +76,20 @@ public class NotasViewModel : INotifyPropertyChanged
         }
     }
 
+    private DateTime _fechaAlarmaBorrador = DateTime.Today;
+    public DateTime FechaAlarmaBorrador
+    {
+        get => _fechaAlarmaBorrador;
+        set
+        {
+            if (_fechaAlarmaBorrador != value)
+            {
+                _fechaAlarmaBorrador = value.Date;
+                OnPropertyChanged(nameof(FechaAlarmaBorrador));
+            }
+        }
+    }
+
     private bool _modoListaCheckboxActivo;
     public bool ModoListaCheckboxActivo
     {
@@ -168,7 +182,8 @@ public class NotasViewModel : INotifyPropertyChanged
     {
         if (e.PropertyName == nameof(Nota.Contenido) ||
             e.PropertyName == nameof(Nota.Titulo) ||
-            e.PropertyName == nameof(Nota.HoraAlarma))
+            e.PropertyName == nameof(Nota.HoraAlarma) ||
+            e.PropertyName == nameof(Nota.FechaAlarma))
         {
             GuardarNotasEnArchivo();
         }
@@ -211,6 +226,7 @@ public class NotasViewModel : INotifyPropertyChanged
             notaEnEdicion.Titulo = tituloFinal;
             notaEnEdicion.Contenido = contenido;
             notaEnEdicion.HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null;
+            notaEnEdicion.FechaAlarma = AlarmaActivaBorrador ? FechaAlarmaBorrador.Date : null;
             notaEnEdicion.Fecha = DateTime.Now;
             NotaSeleccionada = null; // limpiamos selección
             OnPropertyChanged(nameof(Notas)); // fuerza refresco visual cuando el contenido queda vacío
@@ -225,6 +241,7 @@ public class NotasViewModel : INotifyPropertyChanged
                 Titulo = tituloFinal,
                 Contenido = contenido,
                 HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null,
+                FechaAlarma = AlarmaActivaBorrador ? FechaAlarmaBorrador.Date : null,
                 Fecha = DateTime.Now
             };
             Notas.Add(nuevaNota);
@@ -239,6 +256,7 @@ public class NotasViewModel : INotifyPropertyChanged
         ItemsListaCheck.Clear();
         AlarmaActivaBorrador = false;
         HoraAlarmaBorrador = new TimeSpan(8, 0, 0);
+        FechaAlarmaBorrador = DateTime.Today;
         OnPropertyChanged(nameof(PuedeActivarModoLista));
     }
 
@@ -249,6 +267,7 @@ public class NotasViewModel : INotifyPropertyChanged
         ModoListaCheckboxActivo = false;
         AlarmaActivaBorrador = false;
         HoraAlarmaBorrador = new TimeSpan(8, 0, 0);
+        FechaAlarmaBorrador = DateTime.Today;
     }
 
     public void AlternarModoListaCheck()
@@ -315,6 +334,7 @@ public class NotasViewModel : INotifyPropertyChanged
         TituloEntryText = nota.Titulo;
         AlarmaActivaBorrador = nota.HoraAlarma.HasValue;
         HoraAlarmaBorrador = nota.HoraAlarma ?? new TimeSpan(8, 0, 0);
+        FechaAlarmaBorrador = nota.FechaAlarma ?? DateTime.Today;
 
         if (IntentarCargarContenidoComoLista(nota.Contenido))
         {
@@ -554,10 +574,39 @@ public class Nota : INotifyPropertyChanged
         }
     }
 
-    public bool TieneAlarma => HoraAlarma.HasValue;
-    public string HoraAlarmaTexto => HoraAlarma.HasValue
-        ? $"{DateTime.Today.Add(HoraAlarma.Value):hh:mm tt}"
-        : string.Empty;
+    private DateTime? _fechaAlarma;
+    public DateTime? FechaAlarma
+    {
+        get => _fechaAlarma;
+        set
+        {
+            var nuevaFecha = value?.Date;
+            if (_fechaAlarma != nuevaFecha)
+            {
+                _fechaAlarma = nuevaFecha;
+                OnPropertyChanged(nameof(FechaAlarma));
+                OnPropertyChanged(nameof(TieneAlarma));
+                OnPropertyChanged(nameof(HoraAlarmaTexto));
+            }
+        }
+    }
+
+    public bool TieneAlarma => HoraAlarma.HasValue || FechaAlarma.HasValue;
+    public string HoraAlarmaTexto
+    {
+        get
+        {
+            if (!TieneAlarma)
+            {
+                return string.Empty;
+            }
+
+            var fecha = FechaAlarma ?? DateTime.Today;
+            var hora = HoraAlarma ?? TimeSpan.Zero;
+            var fechaHora = fecha.Date.Add(hora);
+            return $"{fechaHora:dd/MM/yyyy hh:mm tt}";
+        }
+    }
 
     private void SincronizarLineasDesdeContenido()
     {

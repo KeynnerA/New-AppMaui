@@ -47,6 +47,10 @@
                                 Time="{Binding HoraAlarmaBorrador}"
                                 IsEnabled="{Binding AlarmaActivaBorrador}"
                                 VerticalOptions="Center" />
+                    <DatePicker x:Name="AlarmDatePicker"
+                                Date="{Binding FechaAlarmaBorrador}"
+                                IsEnabled="{Binding AlarmaActivaBorrador}"
+                                VerticalOptions="Center" />
                     <Button Text="Guardar"
                             Padding="10,4"
                             Clicked="GuardarAlarma_Clicked" />

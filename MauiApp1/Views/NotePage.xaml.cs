@@ -103,6 +103,7 @@ public partial class NotePage : ContentPage
         if (BindingContext is MauiApp1.Models.NotasViewModel vm)
         {
             AlarmTimePicker.Time = vm.HoraAlarmaBorrador;
+            AlarmDatePicker.Date = vm.FechaAlarmaBorrador;
         }
 
         AlarmPanel.IsVisible = !AlarmPanel.IsVisible;
@@ -113,10 +114,11 @@ public partial class NotePage : ContentPage
         if (BindingContext is MauiApp1.Models.NotasViewModel vm)
         {
             vm.HoraAlarmaBorrador = AlarmTimePicker.Time;
+            vm.FechaAlarmaBorrador = AlarmDatePicker.Date;
         }
 
         var estado = (BindingContext as MauiApp1.Models.NotasViewModel)?.AlarmaActivaBorrador == true
-            ? $"Alarma colocada a la nota para las {DateTime.Today.Add(AlarmTimePicker.Time):hh:mm tt}"
+            ? $"Alarma colocada para {AlarmDatePicker.Date:dd/MM/yyyy} {AlarmDatePicker.Date.Add(AlarmTimePicker.Time):hh:mm tt}"
             : "Alarma desactivada para esta nota";
 
         await DisplayAlert("Alarma", estado, "OK");

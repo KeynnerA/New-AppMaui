@@ -11,8 +11,13 @@
         Title="Notes"
         ContentTemplate="{DataTemplate views:NotePage}"
         Icon="icon_notes.png" />
-
-    <ShellContent
+        
+        <ShellContent
+    Title="Create Notes"
+    ContentTemplate="{DataTemplate views:AboutPage}"
+    Icon="icon_about.png" />
+        
+        <ShellContent
     Title="About"
     ContentTemplate="{DataTemplate views:AboutPage}"
     Icon="icon_about.png" />
