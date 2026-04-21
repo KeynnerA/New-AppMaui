@@ -14,7 +14,7 @@
         
         <ShellContent
     Title="Create Notes"
-    ContentTemplate="{DataTemplate views:AboutPage}"
+    ContentTemplate="{DataTemplate views:CreateNotes}"
     Icon="icon_about.png" />
         
         <ShellContent
@@ -28,3 +28,4 @@
     </TabBar>
 
 </Shell>
+  
