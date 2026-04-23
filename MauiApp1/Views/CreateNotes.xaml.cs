@@ -5,6 +5,21 @@ public partial class CreateNotes : ContentPage
     public CreateNotes()
     {
         InitializeComponent();
+        BindingContext = MauiApp1.Services.ViewModelLocator.NotasViewModel;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Si hay una nota seleccionada para edición, enfocar el campo apropiado
+        if (BindingContext is MauiApp1.Models.NotasViewModel vm && vm.NotaSeleccionada != null)
+        {
+            if (vm.UsaEditorTextoPlano)
+            {
+                TextEditor.Focus();
+            }
+        }
     }
 
     private async void SaveButton_Clicked(object sender, EventArgs e)
@@ -30,47 +45,12 @@ public partial class CreateNotes : ContentPage
 
 
 
-    private void DeleteButton_Clicked(object sender, EventArgs e)
+    private void ClearButton_Clicked(object sender, EventArgs e)
     {
         if (BindingContext is MauiApp1.Models.NotasViewModel vm)
         {
             vm.LimpiarBorradorContenido();
         }
-    }
-
-    private async void EditButton_Clicked(object sender, EventArgs e)
-    {
-        var action = await DisplayActionSheet("Opcion", "Cancelar", null, "Editar nota", "Eliminar nota");
-
-        if (action == "Editar nota")
-        {
-            if (BindingContext is MauiApp1.Models.NotasViewModel vm &&
-                sender is Button button &&
-                button.BindingContext is MauiApp1.Models.Nota nota)
-            {
-                vm.CargarNotaParaEdicion(nota);
-            }
-
-            if (BindingContext is MauiApp1.Models.NotasViewModel vmEdicion && vmEdicion.UsaEditorTextoPlano)
-            {
-                TextEditor.Focus();
-            }
-        }
-        else if (action == "Cancelar")
-        {
-
-        }
-        else if (action == "Eliminar nota") 
-        {
-            if (BindingContext is MauiApp1.Models.NotasViewModel vm &&
-                sender is Button button &&
-                button.BindingContext is MauiApp1.Models.Nota nota)
-            {
-                vm.EliminarNota(nota);
-            }
-        }
-
-
     }
 
     private void ToggleEditorCheckboxToolbarItem_Clicked(object sender, EventArgs e)
