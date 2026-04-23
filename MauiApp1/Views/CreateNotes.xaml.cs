@@ -26,6 +26,8 @@ public partial class CreateNotes : ContentPage
     {
         if (BindingContext is MauiApp1.Models.NotasViewModel vm)
         {
+            var estabaEditando = vm.NotaSeleccionada != null;
+
             if (string.IsNullOrWhiteSpace(vm.TituloEntryText))
             {
                 await DisplayAlert("Advertencia",
@@ -39,6 +41,11 @@ public partial class CreateNotes : ContentPage
                 vm.GuardarNotaCommand.Execute(null);
                 await DisplayAlert("Aviso", "Nota guardada", "OK");
                 AlarmPanel.IsVisible = false;
+
+                if (estabaEditando)
+                {
+                    await Shell.Current.GoToAsync("//Notes");
+                }
             }
         }
     }

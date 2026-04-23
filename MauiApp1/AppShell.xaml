@@ -9,11 +9,13 @@
     <TabBar>
     <ShellContent
         Title="Notes"
+        Route="Notes"
         ContentTemplate="{DataTemplate views:NotePage}"
         Icon="icon_notes.png" />
         
         <ShellContent
     Title="Create Notes"
+    Route="CreateNotes"
     ContentTemplate="{DataTemplate views:CreateNotes}"
     Icon="icon_about.png" />
         

@@ -19,11 +19,11 @@ public partial class NotePage : ContentPage
                 button.BindingContext is MauiApp1.Models.Nota nota)
             {
                 vm.CargarNotaParaEdicion(nota);
-                // Navegar a CreateNotes para editar
-                await Navigation.PushAsync(new MauiApp1.Views.CreateNotes());
+                // Cambia al tab existente de CreateNotes sin apilar una nueva pagina
+                await Shell.Current.GoToAsync("//CreateNotes");
             }
         }
-        else if (action == "Eliminar nota") 
+        else if (action == "Eliminar nota")
         {
             if (BindingContext is MauiApp1.Models.NotasViewModel vm &&
                 sender is Button button &&
