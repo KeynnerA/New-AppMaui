@@ -25,7 +25,19 @@
             <DataTemplate>
                 <Grid ColumnDefinitions="*,Auto" Padding="10">
                     <VerticalStackLayout Grid.Column="0">
-                        <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding EstaCompletada}" VerticalOptions="Center" />
+                            <Label Text="{Binding Titulo}" FontAttributes="Bold">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding EstaCompletada}"
+                                                 Value="True">
+                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                        <Setter Property="TextColor" Value="Gray" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </HorizontalStackLayout>
                         <Label Text="{Binding Prioridad}"
                                FontSize="11">
                             <Label.Triggers>

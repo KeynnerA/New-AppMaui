@@ -7,11 +7,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Windows.Input;
 using Microsoft.Maui.Storage;
+using Plugin.LocalNotification;
 
 namespace MauiApp1.Models;
 
 public class NotasViewModel : INotifyPropertyChanged
 {
+    private const string PrefijoNotaHecha = "[Hecha] ";
     private readonly string _filePath =
         Path.Combine(FileSystem.AppDataDirectory, "notas.json");
 
@@ -157,6 +159,8 @@ public class NotasViewModel : INotifyPropertyChanged
 
         CargarNotasDesdeArchivo();
         ConfigurarSincronizacionNotas();
+        _ = InicializarNotificacionesAsync();
+        ReprogramarAlarmasPendientes();
     }
 
     private void ConfigurarSincronizacionNotas()
@@ -199,6 +203,7 @@ public class NotasViewModel : INotifyPropertyChanged
         if (e.PropertyName == nameof(Nota.Contenido) ||
             e.PropertyName == nameof(Nota.Titulo) ||
             e.PropertyName == nameof(Nota.Prioridad) ||
+            e.PropertyName == nameof(Nota.EstaCompletada) ||
             e.PropertyName == nameof(Nota.HoraAlarma) ||
             e.PropertyName == nameof(Nota.FechaAlarma) ||
             e.PropertyName == nameof(Nota.FechaCreacion))
@@ -241,12 +246,14 @@ public class NotasViewModel : INotifyPropertyChanged
             // Si hay una nota seleccionada, actualizamos su contenido y título
             var notaEnEdicion = NotaSeleccionada;
             var tituloFinal = ObtenerTituloUnico(tituloBase, notaEnEdicion);
+            CancelarNotificacion(notaEnEdicion);
             notaEnEdicion.Titulo = tituloFinal;
             notaEnEdicion.Contenido = contenido;
             notaEnEdicion.Prioridad = PrioridadBorrador;
             notaEnEdicion.HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null;
             notaEnEdicion.FechaAlarma = AlarmaActivaBorrador ? FechaAlarmaBorrador.Date : null;
             notaEnEdicion.Fecha = DateTime.Now;
+            ProgramarNotificacion(notaEnEdicion);
             NotaSeleccionada = null; // limpiamos selección
             OnPropertyChanged(nameof(Notas)); // fuerza refresco visual cuando el contenido queda vacío
         }
@@ -265,6 +272,7 @@ public class NotasViewModel : INotifyPropertyChanged
                 FechaCreacion = DateTime.Now,
                 Fecha = DateTime.Now
             };
+            ProgramarNotificacion(nuevaNota);
             Notas.Add(nuevaNota);
         }
 
@@ -426,9 +434,118 @@ public class NotasViewModel : INotifyPropertyChanged
     {
         if (nota != null && Notas.Contains(nota))
         {
+            CancelarNotificacion(nota);
             Notas.Remove(nota);
             GuardarNotasEnArchivo();
         }
+    }
+
+    private async Task InicializarNotificacionesAsync()
+    {
+        try
+        {
+            await LocalNotificationCenter.Current.RequestNotificationPermission();
+        }
+        catch
+        {
+            // Si el SO rechaza permisos, la app sigue funcionando sin romperse.
+        }
+    }
+
+    private void ReprogramarAlarmasPendientes()
+    {
+        foreach (var nota in Notas)
+        {
+            ProgramarNotificacion(nota);
+        }
+    }
+
+    private void ProgramarNotificacion(Nota nota)
+    {
+        if (!TieneAlarmaValida(nota))
+        {
+            return;
+        }
+
+        var fechaHoraAlarma = nota.FechaAlarma!.Value.Date.Add(nota.HoraAlarma!.Value);
+        if (fechaHoraAlarma <= DateTime.Now)
+        {
+            return;
+        }
+
+        if (nota.NotificationId <= 0)
+        {
+            nota.NotificationId = Math.Abs(nota.Id.GetHashCode());
+            if (nota.NotificationId == 0)
+            {
+                nota.NotificationId = Random.Shared.Next(1, int.MaxValue);
+            }
+        }
+
+        var request = new NotificationRequest
+        {
+            NotificationId = nota.NotificationId,
+            Title = "Alarma de nota",
+            Description = nota.Titulo,
+            ReturningData = nota.Id,
+            CategoryType = NotificationCategoryType.Reminder,
+            Schedule = new NotificationRequestSchedule
+            {
+                NotifyTime = fechaHoraAlarma
+            }
+        };
+
+        _ = LocalNotificationCenter.Current.Show(request);
+    }
+
+    private static bool TieneAlarmaValida(Nota nota)
+    {
+        return nota.HoraAlarma.HasValue &&
+               nota.FechaAlarma.HasValue &&
+               !nota.EstaCompletada &&
+               !string.IsNullOrWhiteSpace(nota.Titulo);
+    }
+
+    private static void CancelarNotificacion(Nota nota)
+    {
+        if (nota.NotificationId > 0)
+        {
+            LocalNotificationCenter.Current.Cancel(nota.NotificationId);
+        }
+    }
+
+    public void PosponerAlarma(string notaId, int minutos)
+    {
+        var nota = Notas.FirstOrDefault(n => n.Id == notaId);
+        if (nota == null)
+        {
+            return;
+        }
+
+        var nuevaFechaHora = DateTime.Now.AddMinutes(minutos);
+        nota.EstaCompletada = false;
+        nota.FechaAlarma = nuevaFechaHora.Date;
+        nota.HoraAlarma = nuevaFechaHora.TimeOfDay;
+        ProgramarNotificacion(nota);
+        GuardarNotasEnArchivo();
+        OnPropertyChanged(nameof(Notas));
+    }
+
+    public void MarcarNotaComoHecha(string notaId)
+    {
+        var nota = Notas.FirstOrDefault(n => n.Id == notaId);
+        if (nota == null)
+        {
+            return;
+        }
+
+        CancelarNotificacion(nota);
+        nota.EstaCompletada = true;
+        nota.HoraAlarma = null;
+        nota.FechaAlarma = null;
+
+        GuardarNotasEnArchivo();
+        OnPropertyChanged(nameof(Notas));
     }
 
     public void OrdenarNotasPorPrioridad()
@@ -490,6 +607,14 @@ public class NotasViewModel : INotifyPropertyChanged
                 var lista = JsonSerializer.Deserialize<List<Nota>>(json);
                 if (lista != null)
                 {
+                    foreach (var nota in lista)
+                    {
+                        if (nota.Titulo.StartsWith(PrefijoNotaHecha, StringComparison.OrdinalIgnoreCase))
+                        {
+                            nota.EstaCompletada = true;
+                            nota.Titulo = nota.Titulo[PrefijoNotaHecha.Length..].TrimStart();
+                        }
+                    }
                     Notas = new ObservableCollection<Nota>(lista);
                     OnPropertyChanged(nameof(Notas));
                 }
@@ -560,6 +685,35 @@ public class Nota : INotifyPropertyChanged
 {
     private bool _sincronizandoContenido;
     private bool _sincronizandoLineas;
+
+    private string _id = Guid.NewGuid().ToString("N");
+    public string Id
+    {
+        get => _id;
+        set
+        {
+            var idNormalizado = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString("N") : value;
+            if (_id != idNormalizado)
+            {
+                _id = idNormalizado;
+                OnPropertyChanged(nameof(Id));
+            }
+        }
+    }
+
+    private int _notificationId;
+    public int NotificationId
+    {
+        get => _notificationId;
+        set
+        {
+            if (_notificationId != value)
+            {
+                _notificationId = value;
+                OnPropertyChanged(nameof(NotificationId));
+            }
+        }
+    }
 
     private string _titulo = string.Empty;
     public string Titulo
@@ -657,6 +811,20 @@ public class Nota : INotifyPropertyChanged
             {
                 _fechaCreacion = value;
                 OnPropertyChanged(nameof(FechaCreacion));
+            }
+        }
+    }
+
+    private bool _estaCompletada;
+    public bool EstaCompletada
+    {
+        get => _estaCompletada;
+        set
+        {
+            if (_estaCompletada != value)
+            {
+                _estaCompletada = value;
+                OnPropertyChanged(nameof(EstaCompletada));
             }
         }
     }
