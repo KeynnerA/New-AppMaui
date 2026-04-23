@@ -1,19 +1,151 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:views="clr-namespace:MauiApp1.Views"
+             xmlns:local="clr-namespace:MauiApp1.Models"
+             xmlns:converters="clr-namespace:MauiApp1.Converters"
              x:Class="MauiApp1.Views.CreateNotes"
              Title="CreateNotes">
-    <VerticalStackLayout>
-        <HorizontalStackLayout>
-            <Image Source="dotnet_bot.png"
-                   SemanticProperties.Description="The dot net bot wavin hello!!" 
-                   HeightRequest="64" />
-            <Label FontSize="22" FontAttributes="Bold" Text="Notes" VerticalOptions="End" />
-            <Label FontSize="22" Text="v1.0v" VerticalOptions="End" />
-        </HorizontalStackLayout>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:ContenidoNotaAFormattedStringConverter x:Key="ContenidoNotaAFormattedStringConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-        <Label Text="App written in MAUI"/>
-        <Button Text="Learn more..." Clicked="LearnMore_Clicked"/>
-    </VerticalStackLayout>
-</ContentPage> 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="☑"
+                     Priority="0"
+                     Order="Primary"
+                     IsEnabled="{Binding PuedeActivarModoLista}"
+                     Clicked="ToggleEditorCheckboxToolbarItem_Clicked" />
+        <ToolbarItem Text="⏰"
+                     Priority="1"
+                     Order="Primary"
+                     Clicked="MostrarAlarmaToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
+
+    <ContentPage.BindingContext>
+        <local:NotasViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*">
+
+        <!-- Título de la nota -->
+        <Entry Grid.Row="0"
+               Placeholder="Título"
+               Text="{Binding TituloEntryText}" />
+
+        <!-- Contenido: texto plano o lista con varios checkboxes -->
+        <VerticalStackLayout Grid.Row="1" Spacing="8">
+            <Border x:Name="AlarmPanel"
+                    IsVisible="False"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="10">
+                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                    <CheckBox IsChecked="{Binding AlarmaActivaBorrador}" VerticalOptions="Center" />
+                    <Label Text="Hora alarma:" VerticalOptions="Center" />
+                    <TimePicker x:Name="AlarmTimePicker"
+                                Time="{Binding HoraAlarmaBorrador}"
+                                IsEnabled="{Binding AlarmaActivaBorrador}"
+                                VerticalOptions="Center" />
+                    <DatePicker x:Name="AlarmDatePicker"
+                                Date="{Binding FechaAlarmaBorrador}"
+                                IsEnabled="{Binding AlarmaActivaBorrador}"
+                                VerticalOptions="Center" />
+                    <Button Text="Guardar"
+                            Padding="10,4"
+                            Clicked="GuardarAlarma_Clicked" />
+                </HorizontalStackLayout>
+            </Border>
+
+            <Editor x:Name="TextEditor"
+                    IsVisible="{Binding UsaEditorTextoPlano}"
+                    Text="{Binding NotaEntryText}"
+                    Placeholder="Escribe tu nota aquí"
+                    HeightRequest="100"/>
+
+            <CollectionView ItemsSource="{Binding ItemsListaCheck}"
+                            IsVisible="{Binding ModoListaCheckboxActivo}"
+                            HeightRequest="220">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:NotaItemLista">
+                        <Grid ColumnDefinitions="Auto,*" Padding="4" ColumnSpacing="8">
+                            <CheckBox Grid.Column="0"
+                                      VerticalOptions="Center"
+                                      IsChecked="{Binding Marcado}" />
+                            <Entry Grid.Column="1"
+                                   Text="{Binding Texto}"
+                                   Placeholder="Ítem de la lista" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Grid IsVisible="{Binding ModoListaCheckboxActivo}"
+                  Padding="10,0"
+                  ColumnDefinitions="*,*"
+                  ColumnSpacing="4">
+                <Button Grid.Column="0"
+                        Text="Añadir línea"
+                        Clicked="AnadirLineaLista_Clicked" />
+                <Button Grid.Column="1"
+                        Text="Eliminar línea"
+                        Clicked="EliminarLineaLista_Clicked" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="2" Padding="10" RowDefinitions="Auto,*" RowSpacing="10">
+            <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="4">
+                <Button Grid.Column="0"
+                        Text="Save"
+                        Clicked="SaveButton_Clicked" />
+                <Button Grid.Column="1"
+                        Text="Delete"
+                        Clicked="DeleteButton_Clicked"/>
+            </Grid>
+
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Notas}"
+                            VerticalOptions="FillAndExpand">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto" Padding="10">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
+                                <VerticalStackLayout IsVisible="{Binding TieneFormatoChecklist}"
+                                                     BindableLayout.ItemsSource="{Binding LineasVisuales}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="local:NotaLineaVisual">
+                                            <HorizontalStackLayout Spacing="6">
+                                                <CheckBox IsChecked="{Binding Marcado}" VerticalOptions="Center" />
+                                                <Label Text="{Binding Texto}" VerticalOptions="Center">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Marcado}"
+                                                                     Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                            <Setter Property="FontAttributes" Value="Bold" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </HorizontalStackLayout>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                                <Label IsVisible="{Binding MostrarTextoPlano}"
+                                       FormattedText="{Binding Contenido, Converter={StaticResource ContenidoNotaAFormattedStringConverter}}" />
+                                <Label IsVisible="{Binding TieneAlarma}"
+                                       Text="{Binding HoraAlarmaTexto}"
+                                       FontSize="11"
+                                       TextColor="DarkOrange"/>
+                                <Label Text="{Binding Fecha}" FontSize="10" TextColor="Gray"/>
+                            </VerticalStackLayout>
+                            <Button Grid.Column="1"
+                                    Text="Opcion"
+                                    Clicked="EditButton_Clicked" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </Grid>
+</ContentPage>
