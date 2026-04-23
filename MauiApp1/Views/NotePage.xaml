@@ -10,6 +10,12 @@
             <converters:ContenidoNotaAFormattedStringConverter x:Key="ContenidoNotaAFormattedStringConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="..."
+                     Priority="0"
+                     Order="Primary"
+                     Clicked="SortToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
 
     
     <Grid Padding="10">
@@ -20,6 +26,26 @@
                 <Grid ColumnDefinitions="*,Auto" Padding="10">
                     <VerticalStackLayout Grid.Column="0">
                         <Label Text="{Binding Titulo}" FontAttributes="Bold"/>
+                        <Label Text="{Binding Prioridad}"
+                               FontSize="11">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding Prioridad}"
+                                             Value="High">
+                                    <Setter Property="TextColor" Value="Red" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding Prioridad}"
+                                             Value="Medium">
+                                    <Setter Property="TextColor" Value="DarkOrange" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding Prioridad}"
+                                             Value="Low">
+                                    <Setter Property="TextColor" Value="Green" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
                         <VerticalStackLayout IsVisible="{Binding TieneFormatoChecklist}"
                                                      BindableLayout.ItemsSource="{Binding LineasVisuales}">
                             <BindableLayout.ItemTemplate>

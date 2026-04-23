@@ -112,6 +112,22 @@ public class NotasViewModel : INotifyPropertyChanged
     public bool PuedeActivarModoLista => true;
 
     public ObservableCollection<NotaItemLista> ItemsListaCheck { get; } = new();
+    public IReadOnlyList<string> PrioridadesDisponibles { get; } = new[] { "Low", "Medium", "High" };
+
+    private string _prioridadBorrador = "Medium";
+    public string PrioridadBorrador
+    {
+        get => _prioridadBorrador;
+        set
+        {
+            var prioridadNormalizada = NormalizarPrioridad(value);
+            if (_prioridadBorrador != prioridadNormalizada)
+            {
+                _prioridadBorrador = prioridadNormalizada;
+                OnPropertyChanged(nameof(PrioridadBorrador));
+            }
+        }
+    }
 
     // Nota actualmente seleccionada para edición
     private Nota? _notaSeleccionada;
@@ -182,8 +198,10 @@ public class NotasViewModel : INotifyPropertyChanged
     {
         if (e.PropertyName == nameof(Nota.Contenido) ||
             e.PropertyName == nameof(Nota.Titulo) ||
+            e.PropertyName == nameof(Nota.Prioridad) ||
             e.PropertyName == nameof(Nota.HoraAlarma) ||
-            e.PropertyName == nameof(Nota.FechaAlarma))
+            e.PropertyName == nameof(Nota.FechaAlarma) ||
+            e.PropertyName == nameof(Nota.FechaCreacion))
         {
             GuardarNotasEnArchivo();
         }
@@ -225,6 +243,7 @@ public class NotasViewModel : INotifyPropertyChanged
             var tituloFinal = ObtenerTituloUnico(tituloBase, notaEnEdicion);
             notaEnEdicion.Titulo = tituloFinal;
             notaEnEdicion.Contenido = contenido;
+            notaEnEdicion.Prioridad = PrioridadBorrador;
             notaEnEdicion.HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null;
             notaEnEdicion.FechaAlarma = AlarmaActivaBorrador ? FechaAlarmaBorrador.Date : null;
             notaEnEdicion.Fecha = DateTime.Now;
@@ -240,8 +259,10 @@ public class NotasViewModel : INotifyPropertyChanged
             {
                 Titulo = tituloFinal,
                 Contenido = contenido,
+                Prioridad = PrioridadBorrador,
                 HoraAlarma = AlarmaActivaBorrador ? HoraAlarmaBorrador : null,
                 FechaAlarma = AlarmaActivaBorrador ? FechaAlarmaBorrador.Date : null,
+                FechaCreacion = DateTime.Now,
                 Fecha = DateTime.Now
             };
             Notas.Add(nuevaNota);
@@ -254,6 +275,7 @@ public class NotasViewModel : INotifyPropertyChanged
         TituloEntryText = string.Empty;
         ModoListaCheckboxActivo = false;
         ItemsListaCheck.Clear();
+        PrioridadBorrador = "Medium";
         AlarmaActivaBorrador = false;
         HoraAlarmaBorrador = new TimeSpan(8, 0, 0);
         FechaAlarmaBorrador = DateTime.Today;
@@ -265,6 +287,7 @@ public class NotasViewModel : INotifyPropertyChanged
         NotaEntryText = string.Empty;
         ItemsListaCheck.Clear();
         ModoListaCheckboxActivo = false;
+        PrioridadBorrador = "Medium";
         AlarmaActivaBorrador = false;
         HoraAlarmaBorrador = new TimeSpan(8, 0, 0);
         FechaAlarmaBorrador = DateTime.Today;
@@ -332,6 +355,7 @@ public class NotasViewModel : INotifyPropertyChanged
     {
         NotaSeleccionada = nota;
         TituloEntryText = nota.Titulo;
+        PrioridadBorrador = NormalizarPrioridad(nota.Prioridad);
         AlarmaActivaBorrador = nota.HoraAlarma.HasValue;
         HoraAlarmaBorrador = nota.HoraAlarma ?? new TimeSpan(8, 0, 0);
         FechaAlarmaBorrador = nota.FechaAlarma ?? DateTime.Today;
@@ -405,6 +429,55 @@ public class NotasViewModel : INotifyPropertyChanged
             Notas.Remove(nota);
             GuardarNotasEnArchivo();
         }
+    }
+
+    public void OrdenarNotasPorPrioridad()
+    {
+        var ordenadas = Notas
+            .OrderByDescending(n => ObtenerPesoPrioridad(n.Prioridad))
+            .ThenByDescending(n => n.FechaCreacion)
+            .ToList();
+        ReemplazarNotas(ordenadas);
+    }
+
+    public void OrdenarNotasPorFechaCreacion()
+    {
+        var ordenadas = Notas
+            .OrderByDescending(n => n.FechaCreacion)
+            .ToList();
+        ReemplazarNotas(ordenadas);
+    }
+
+    private void ReemplazarNotas(List<Nota> notasOrdenadas)
+    {
+        Notas.Clear();
+        foreach (var nota in notasOrdenadas)
+        {
+            Notas.Add(nota);
+        }
+        OnPropertyChanged(nameof(Notas));
+        GuardarNotasEnArchivo();
+    }
+
+    private static string NormalizarPrioridad(string? prioridad)
+    {
+        return prioridad switch
+        {
+            "Low" => "Low",
+            "High" => "High",
+            _ => "Medium"
+        };
+    }
+
+    private static int ObtenerPesoPrioridad(string? prioridad)
+    {
+        return prioridad switch
+        {
+            "High" => 3,
+            "Medium" => 2,
+            "Low" => 1,
+            _ => 2
+        };
     }
 
     private void CargarNotasDesdeArchivo()
@@ -539,6 +612,27 @@ public class Nota : INotifyPropertyChanged
 
     public ObservableCollection<NotaLineaVisual> LineasVisuales { get; } = new();
 
+    private string _prioridad = "Medium";
+    public string Prioridad
+    {
+        get => _prioridad;
+        set
+        {
+            var prioridadNormalizada = value switch
+            {
+                "Low" => "Low",
+                "High" => "High",
+                _ => "Medium"
+            };
+
+            if (_prioridad != prioridadNormalizada)
+            {
+                _prioridad = prioridadNormalizada;
+                OnPropertyChanged(nameof(Prioridad));
+            }
+        }
+    }
+
     private DateTime _fecha = DateTime.Now;
     public DateTime Fecha
     {
@@ -549,6 +643,20 @@ public class Nota : INotifyPropertyChanged
             {
                 _fecha = value;
                 OnPropertyChanged(nameof(Fecha));
+            }
+        }
+    }
+
+    private DateTime _fechaCreacion = DateTime.Now;
+    public DateTime FechaCreacion
+    {
+        get => _fechaCreacion;
+        set
+        {
+            if (_fechaCreacion != value)
+            {
+                _fechaCreacion = value;
+                OnPropertyChanged(nameof(FechaCreacion));
             }
         }
     }

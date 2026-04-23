@@ -33,6 +33,14 @@
 
         <!-- Contenido: texto plano o lista con varios checkboxes -->
         <VerticalStackLayout Grid.Row="1" Spacing="8">
+            <HorizontalStackLayout Spacing="10"
+                                   VerticalOptions="Center">
+                <Label Text="Prioridad:" VerticalOptions="Center" />
+                <Picker WidthRequest="160"
+                        ItemsSource="{Binding PrioridadesDisponibles}"
+                        SelectedItem="{Binding PrioridadBorrador}" />
+            </HorizontalStackLayout>
+
             <Border x:Name="AlarmPanel"
                     IsVisible="False"
                     StrokeShape="RoundRectangle 8"

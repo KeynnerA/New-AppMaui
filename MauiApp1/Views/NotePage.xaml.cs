@@ -34,4 +34,28 @@ public partial class NotePage : ContentPage
         }
     }
 
+    private async void SortToolbarItem_Clicked(object sender, EventArgs e)
+    {
+        var action = await DisplayActionSheet(
+            "Ordenar notas",
+            "Cancelar",
+            null,
+            "Por prioridad",
+            "Por fecha de creacion");
+
+        if (BindingContext is not MauiApp1.Models.NotasViewModel vm)
+        {
+            return;
+        }
+
+        if (action == "Por prioridad")
+        {
+            vm.OrdenarNotasPorPrioridad();
+        }
+        else if (action == "Por fecha de creacion")
+        {
+            vm.OrdenarNotasPorFechaCreacion();
+        }
+    }
+
 }
