@@ -49,7 +49,7 @@
                                 <DataTrigger TargetType="Label"
                                              Binding="{Binding Prioridad}"
                                              Value="Medium">
-                                    <Setter Property="TextColor" Value="DarkOrange" />
+                                    <Setter Property="TextColor" Value="OrangeRed" />
                                 </DataTrigger>
                                 <DataTrigger TargetType="Label"
                                              Binding="{Binding Prioridad}"
